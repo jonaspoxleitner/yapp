@@ -21,23 +21,26 @@ export interface NotifyOptions {
 	skipIfFocused?: boolean;
 	/** Always notify even when terminal is focused (default: false). Overrides skipIfFocused. */
 	skipIfForeground?: boolean;
+	/** Project name to prefix the notification title */
+	projectName?: string;
 }
 
 export async function sendNotification(opts: NotifyOptions): Promise<void> {
-	const { title, body, cwd = process.cwd() } = opts;
+	const { title, body, cwd = process.cwd(), projectName } = opts;
 	const skip = opts.skipIfForeground === false ? false : (opts.skipIfFocused ?? true);
 
 	if (skip && isTerminalFocused()) return;
 
 	if (process.platform === "darwin") {
-		await notifyMacOS(title, body, cwd);
+		await notifyMacOS(projectName, title, body, cwd);
 	} else if (process.platform === "linux") {
-		notifyLinux(title, body);
+		notifyLinux(projectName, title, body);
 	}
 }
 
-function notifyLinux(title: string, body: string): void {
-	const args = ["--app-name=Pi", "--urgency=critical", title, body, "--action=default=Focus terminal"];
+function notifyLinux(projectName: string | undefined, title: string, body: string): void {
+	const appName = projectName ? `Pi - ${projectName}` : "Pi";
+	const args = ["--app-name", appName, "--urgency=critical", title, body, "--action=default=Focus terminal"];
 
 	const proc = execFile("notify-send", args, () => {});
 
@@ -50,11 +53,21 @@ function notifyLinux(title: string, body: string): void {
 	}
 }
 
-async function notifyMacOS(title: string, body: string, cwd: string): Promise<void> {
+async function notifyMacOS(projectName: string | undefined, title: string, body: string, cwd: string): Promise<void> {
 	const bundleId = process.env.__CFBundleIdentifier;
 	if (!bundleId) return;
 
-	const args = ["-title", "Pi", "-subtitle", title, "-message", body, "-sound", "default", "-ignoreDnD"];
+	const args = [
+		"-title",
+		projectName ? `Pi - ${projectName}` : "Pi",
+		"-subtitle",
+		title,
+		"-message",
+		body,
+		"-sound",
+		"default",
+		"-ignoreDnD",
+	];
 
 	if (process.env.ZED_TERM) {
 		let zedPath: string;
