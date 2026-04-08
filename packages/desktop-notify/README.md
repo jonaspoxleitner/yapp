@@ -9,6 +9,7 @@ Desktop notifications for terminal applications. Focus-aware — suppresses noti
 - **Focus tracking** — detects terminal focus via DECSET 1004 escape sequences. Notifications are suppressed while the terminal is focused (configurable).
 - **Click-to-focus** — clicking a notification focuses the terminal window. Supports macOS, niri, sway, and hyprland.
 - **Cross-platform** — macOS via `terminal-notifier`, Linux via `notify-send`.
+- **Project names** — customize notification titles per project via `/project-name` so you can tell which project a notification is from.
 - **Zero dependencies** — uses `node:child_process` directly.
 
 ## Install
@@ -73,6 +74,7 @@ Send a desktop notification.
 | `body` | `string` | required | Notification body |
 | `cwd` | `string` | `process.cwd()` | Working directory (used for macOS click-to-focus in Zed) |
 | `skipIfFocused` | `boolean` | `true` | Suppress when terminal is focused |
+| `projectName` | `string` | `undefined` | Project name to prefix the notification title |
 
 ### `startFocusTracking()`
 
@@ -93,6 +95,36 @@ Capture the currently focused window's compositor ID. Call when the terminal is 
 ### `focusWindow()`
 
 Focus the previously captured terminal window. Called automatically on notification click.
+
+### `setProjectName(projectPath, name)`
+
+Set a project name for a given path. Surrounding quotes are stripped automatically.
+
+### `getProjectName(projectPath)`
+
+Get the project name for a given path. Returns `undefined` if none is set.
+
+### `removeProjectName(projectPath)`
+
+Remove the project name for a given path.
+
+## Per-project names
+
+By default, notifications show "Pi" as the app name. You can set a custom project name so notifications are prefixed (e.g. "Pi - My Project"):
+
+```
+/project-name "My Project"
+```
+
+Remove it again:
+
+```
+/project-name
+```
+
+Project names are stored in `~/.pi/agent/extensions/pi-desktop-notify.json`, keyed by project path.
+
+---
 
 ## How it works
 
